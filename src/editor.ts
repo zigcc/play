@@ -405,6 +405,9 @@ const statusText = document.getElementById("status-text")!;
 
 let compileBlock: HTMLElement | null = null;
 let runBlock: HTMLElement | null = null;
+/** Runtime stderr (panics, crash messages) — separate block so it can
+ *  render as wrapping error text while stdout keeps fixed-width `pre`. */
+let runErrBlock: HTMLElement | null = null;
 
 /**
  * IR tabs (Decompile / WAT). Shared wasm buffer; each view converts lazily
@@ -629,6 +632,7 @@ function clearOutput() {
   outputPad.replaceChildren();
   compileBlock = null;
   runBlock = null;
+  runErrBlock = null;
   outputContainer.scrollLeft = 0;
   clearIrViews();
 }
@@ -665,6 +669,16 @@ function appendRun(text: string) {
     outputPad.appendChild(runBlock);
   }
   runBlock.textContent += text;
+  scrollOutput();
+}
+
+function appendRunErr(text: string) {
+  if (!runErrBlock) {
+    runErrBlock = document.createElement("div");
+    runErrBlock.className = "runner-stderr";
+    outputPad.appendChild(runErrBlock);
+  }
+  runErrBlock.textContent += text;
   scrollOutput();
 }
 
@@ -1003,8 +1017,10 @@ const onZigWorkerMessage = (msg: WorkerMsg) => {
 
     runnerWorker.onmessage = (rev: MessageEvent) => {
       if (gen !== runGen) return;
-      if (rev.data.stderr) {
-        appendRun(rev.data.stderr);
+      if (rev.data.stdout) {
+        appendRun(rev.data.stdout);
+      } else if (rev.data.stderr) {
+        appendRunErr(rev.data.stderr);
       } else if (rev.data.exitCode !== undefined) {
         clearRunningStatusTimer();
         setStatus({

@@ -1,15 +1,15 @@
 // Runs compiled Zig code
 
 import { WASI, PreopenDirectory, OpenFile, File } from "@bjorn3/browser_wasi_shim";
-import { stderrOutput } from "../utils";
+import { streamOutput } from "../utils";
 
 async function run(wasmData: BufferSource) {
     const args = ["main.wasm"];
     const env: string[] = [];
     const fds = [
         new OpenFile(new File([])), // stdin
-        stderrOutput(), // stdout
-        stderrOutput(), // stderr
+        streamOutput("stdout"), // stdout
+        streamOutput("stderr"), // stderr
         new PreopenDirectory(".", new Map([])),
     ];
     const wasi = new WASI(args, env, fds);

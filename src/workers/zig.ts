@@ -1,5 +1,5 @@
 import { WASI, PreopenDirectory, Fd, File, OpenFile, Inode, Directory } from "@bjorn3/browser_wasi_shim";
-import { compileWasmAsset, fetchAssetBuffer, getZigArchive, stderrOutput } from "../utils";
+import { compileWasmAsset, fetchAssetBuffer, getZigArchive, streamOutput } from "../utils";
 import {
     type FlatEntry,
     loadZirCacheEntries,
@@ -141,8 +141,8 @@ async function run(source: string) {
         const env: string[] = [];
         const fds = [
             new OpenFile(new File([])), // stdin
-            stderrOutput(), // stdout
-            stderrOutput(), // stderr
+            streamOutput("stderr"), // stdout (compiler diagnostics only)
+            streamOutput("stderr"), // stderr
             new PreopenDirectory(".", new Map<string, Inode>([
                 ["main.zig", new File(new TextEncoder().encode(source))],
                 // Fresh File each run; buffer is shared read-only.

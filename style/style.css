@@ -561,7 +561,8 @@ main {
 }
 
 #output-pad > .zig-output,
-#output-pad > .runner-output {
+#output-pad > .runner-output,
+#output-pad > .runner-stderr {
     white-space: pre;
     font-family: var(--editor-font-mono);
     font-size: var(--editor-font-size);
@@ -570,7 +571,13 @@ main {
     color: var(--output-text);
 }
 
-#output-pad > .zig-output {
+/* Error text (compile diagnostics, runtime stderr): wrap long lines instead
+   of forcing horizontal scroll. `anywhere` breaks unbroken tokens like
+   type names and file paths. */
+#output-pad > .zig-output,
+#output-pad > .runner-stderr {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     color: var(--status-err);
 }
 

@@ -109,13 +109,16 @@ function convert(node: TreeNode): Directory {
     )
 }
 
-export function stderrOutput(): ConsoleStdout {
+/** WASI stdout/stderr sink that streams decoded chunks to the UI thread.
+ *  `field` picks the postMessage key so the output pane can tell the
+ *  streams apart (stderr renders as wrapping error text). */
+export function streamOutput(field: "stdout" | "stderr"): ConsoleStdout {
     const dec = new TextDecoder("utf-8", { fatal: false });
-    const stderr = new ConsoleStdout((buffer) => {
-        postMessage({ stderr: dec.decode(buffer, { stream: true }) });
+    const stream = new ConsoleStdout((buffer) => {
+        postMessage({ [field]: dec.decode(buffer, { stream: true }) });
     });
-    stderr.fd_pwrite = (data, offset) => {
+    stream.fd_pwrite = (data, offset) => {
         return { ret: wasi_defs.ERRNO_SPIPE, nwritten: 0 };
     }
-    return stderr;
+    return stream;
 }
